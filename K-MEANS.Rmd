@@ -1,0 +1,179 @@
+---
+title: "Untitled"
+author: "Nian Yi"
+date: "June 7, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+########################################################
+#kmeans algorithm illustration
+########################################################
+
+# Plot raw data
+plot(iris$Petal.Width,iris$Petal.Length)
+
+
+########################################################
+# Start algorithm!
+########################################################
+# Randomly assign points to clusters (STEP 0)
+K <- 3
+data <- iris[,c(3,4)]
+clusters <- sample(1:K, nrow(data), replace = TRUE)
+
+# Plot raw data split by random cluster assignment 
+plot(iris$Petal.Width,iris$Petal.Length,col=clusters+1)
+
+############################
+# Compute centroids (STEP 1)
+############################
+
+# Compute cluster average for one feature (Petal.Width)
+tapply(iris$Petal.Width,clusters,mean) 
+# Apply the "tapply" function to the columns of data. 
+centers  <- apply(data, 2, tapply, clusters, mean)
+centers
+
+# Plot centroids with data
+plot(iris$Petal.Width,iris$Petal.Length,col=clusters+1)
+points(centers[,2],centers[,1],
+       col=c(2,3,4),
+       pch=rep("*",3),
+       cex=4)
+
+############################
+# Create new clusters (STEP 1) 
+############################
+new.clus <- new.clusters(points = data, 
+                         centers = centers)
+
+# Define distance function p-2 features 
+dist <- function(p1, p2) {
+  return(sum((p1 - p2)^2))
+}
+
+# Define distance function p-2 features 
+point.assign <- function(point, centers) {
+  # Input: one point
+  # Output: which cluster center is closest
+  return(which.min(c(dist(point, centers[1, ]), 
+                     dist(point, centers[2, ]), 
+                     dist(point, centers[3, ]))))
+}
+# Test a point 
+data[1,] # (1.4,0.2)
+points(data[1,2],data[1,1],pch="o",cex=2)
+point.assign(point=data[1,],centers=centers)
+# The point (1.4,0.2) should be assigned to cluster ? 
+
+
+# Define a function that assigns new clusters for all points
+new.clusters <- function(points, centers) {
+  # Input: points and centers
+  # Output: new cluster assignment
+  return(apply(points, 1, point.assign, centers))
+}
+# Test function 
+clusters <- new.clusters(points=data,centers=centers)
+
+# Plot centroids with data and new assigned points 
+plot(iris$Petal.Width,iris$Petal.Length,col=clusters+1)
+points(centers[,2],centers[,1],
+       col=c(2,3,4),
+       pch=rep("*",3),
+       cex=4)
+
+
+# Rinse and repeat
+
+############################
+# Compute centroids (STEP 2)
+############################
+
+centers  <- apply(data, 2, tapply, clusters, mean)
+centers
+
+# Plot centroids with data
+plot(iris$Petal.Width,iris$Petal.Length,col=clusters+1)
+points(centers[,2],centers[,1],
+       col=c(2,3,4),
+       pch=rep("*",3),
+       cex=4)
+
+
+############################
+# Create new clusters (STEP 2)
+############################
+clusters <- new.clusters(points=data,centers=centers)
+
+# Plot centroids with data and new assigned points 
+plot(iris$Petal.Width,iris$Petal.Length,col=clusters+1)
+points(centers[,2],centers[,1],
+       col=c(2,3,4),
+       pch=rep("*",3),
+       cex=4)
+
+
+############################
+# Compute centroids (STEP 3)
+############################
+
+centers  <- apply(data, 2, tapply, clusters, mean)
+centers
+
+# Plot centroids with data
+plot(iris$Petal.Width,iris$Petal.Length,col=clusters+1)
+points(centers[,2],centers[,1],
+       col=c(2,3,4),
+       pch=rep("*",3),
+       cex=4)
+
+
+############################
+# Create new clusters (STEP 3)
+############################
+clusters <- new.clusters(points=data,centers=centers)
+
+# Plot centroids with data and new assigned points 
+plot(iris$Petal.Width,iris$Petal.Length,col=clusters+1)
+points(centers[,2],centers[,1],
+       col=c(2,3,4),
+       pch=rep("*",3),
+       cex=4)
+
+
+
+############################
+# Compute centroids (STEP 4)
+############################
+
+centers  <- apply(data, 2, tapply, clusters, mean)
+centers
+
+# Plot centroids with data
+plot(iris$Petal.Width,iris$Petal.Length,col=clusters+1)
+points(centers[,2],centers[,1],
+       col=c(2,3,4),
+       pch=rep("*",3),
+       cex=4)
+
+
+############################
+# Create new clusters (STEP 4)
+############################
+clusters <- new.clusters(points=data,centers=centers)
+
+# Plot centroids with data and new assigned points 
+plot(iris$Petal.Width,iris$Petal.Length,col=clusters+1)
+points(centers[,2],centers[,1],
+       col=c(2,3,4),
+       pch=rep("*",3),
+       cex=4)
+
+
+
+```
+
+

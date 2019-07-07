@@ -1,0 +1,199 @@
+---
+title: "HW4"
+author: "Nian Yi"
+date: "July 5, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+## import data
+train.3<-read.table("train_3.txt",header = F, sep=",")
+train.8<-read.table("train_8.txt",header = F, sep=",")
+test<-as.matrix(read.table("zip_test.txt"))
+N.3<-nrow(train.3)
+N.8<-nrow(train.8)
+xtrain<-rbind(as.matrix(train.3),as.matrix(train.8))
+ytrain<-as.matrix(rep(c(-1,1),c(N.3,N.8)))
+ytest<-test[,1]
+xtest<-test[ytest==3|ytest==8,-1]
+ytest<-as.matrix(ytest[ytest==3|ytest==8])
+ytest[ytest==3]<--1
+ytest[ytest==8]<-1
+
+X<-rbind(xtrain,xtest)
+Y<-rbind(ytrain,ytest)
+n<-nrow(X)
+p<-sample(n)
+trainIndex<-p[1:round(n/2)]
+testIndex<-p[-(1:round(n/2))]
+#### a new test train split prepared for the later step.
+Xtest<- X[testIndex,]
+Ytrain<- Y[trainIndex,]
+Xtrain<-X[trainIndex,]
+Ytest<- Y[testIndex,]
+
+```
+
+
+```{r}
+# AdaBoost algorithm function, record pars and alpha 
+# for all bs
+library(freestats)
+ada<-function(x,y,B){
+## initial weight and alphas
+  w<-rep(1/nrow(x), times=nrow(x)) 
+  alpha<-rep(0,B)
+  
+  Pars1<-rep(list(list()),B)
+  for (b in 1:B){
+    ## train a decision Stump as weak learner
+    Pars1[[b]]<-decisionStump(x,w,y) 
+    pars<-Pars1[[b]]
+    preds <- classify(pars,x)
+    preds[preds <= 0] <- -1
+    preds[preds > 0] <- 1
+
+    e<-(w%*%as.numeric(y!=preds)/sum(w))[1]
+    
+# weight    
+    
+    alpha[b]<-log((1-e)/e)/2 
+    
+## reweight
+    w<-w*exp(alpha[b]*as.numeric(y!=preds))
+  }
+  
+  return(list(Pars=Pars1,alpha=alpha))
+} 
+
+```
+
+
+```{r}
+# implementation
+
+testErrorRate<-c()
+trainErrorRate<-c()
+
+ada<-ada(Xtrain,Ytrain,10)
+
+# votings
+
+vote<-function(x,alpha,allPars){
+  n<-nrow(x)
+  B<-length(alpha)
+  result<-matrix(0,nrow=n,ncol=B)
+  
+  
+
+  
+  for(b in 1:B){
+    pars<-allPars[[b]]
+    pred <- classify(pars,x)
+    pred[pred <= 0] <- -1
+    pred[pred > 0] <- 1
+    result[,b]<-pred
+  }
+
+  c_hat<-sign(result %*% alpha)
+  return(c_hat)
+}
+
+
+
+  for(i in 1:10){
+    c_test<-vote(Xtest,ada$alpha[1:i],ada$Pars[1:i])
+    testErrorRate<-c(testErrorRate,mean(Ytest != c_test))
+    
+    
+    c_train<-vote(Xtrain,ada$alpha[1:i],ada$Pars[1:i])
+    trainErrorRate<-c(trainErrorRate,mean(Ytrain != c_train)) 
+    
+    
+  }
+
+```
+
+```{r}
+#  Plot train error and test error
+matplot(trainErrorRate,type="l",main="Training Error",xlab="B")
+matplot(testErrorRate,type="l",main="Test Error",xlab="B")
+
+
+
+```
+##2
+
+```{r}
+H<-matrix(readBin("histograms.bin", "double", 640000), 40000, 16)
+dim(H)
+#computation of the assignment probabilities ai and adjusting the cluster centroids tk.
+
+
+```
+```{r}
+MultinomialEM<-function(H,K,tau){
+## test
+  ## K=3  
+## tau = 1
+###########################
+  ## initial K centroid, assignment probabilities
+n<-nrow(H)  
+C<-H[ (sample(1:n,size=K,replace=FALSE)), ]  
+prob<- matrix(0,n,K)
+a<- matrix(0,n,K)
+
+## mixture weight w
+w<-rep(1/K, length.out = K)
+b = matrix(0, K, ncol(H)) 
+delta = 10000
+
+## assignment m
+
+m = rep(0,n)
+while(delta>tau){
+  
+  a_previous = a
+  ## E step
+  prob = exp(H %*% t(log(C+0.01)))
+  ## log C has some -inf value,so I add 0.01
+  a = t(w * t(prob)) / rowSums(t(w * t(prob)))
+  ## M step
+  w = colMeans(a)
+  b = t(a)%*%H
+  C = b/rowSums(b)
+
+  delta = norm(a-a_previous,type ='O')
+}
+  ## get m
+
+m<-apply(a, 1, FUN = which.max)
+  return (m)
+}
+```
+2. Run the algorithm on the input data for K=3, K=4 and K=5. You may have to try di???erent values of ?? to obtain a reasonable result.
+3. Visualize the results as an image. You can turn a hard assignment vector m returned by the EM algorithm into an image using the image function in R.
+```{r}
+ result3<-MultinomialEM(H, 3, 0.05)
+hist_3 <- matrix(result3, 200, 200)
+image(hist_3, col = gray((1:9) / 10), axes = F)
+
+result4<-MultinomialEM(H, 4, 0.02)
+hist_4 <- matrix(result4, 200, 200)
+image(hist_4, col = gray((1:9) / 10), axes = F)
+
+result5<-MultinomialEM(H, 5, 0.01)
+hist_5 <- matrix(result5, 200, 200)
+image(hist_5, col = gray((1:9) / 10), axes = F)
+
+```
+ 
+
+
+
+
+
